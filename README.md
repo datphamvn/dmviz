@@ -29,6 +29,13 @@ A modular Python repository for end-to-end data pipelines. Each team member owns
 pip install -e .
 ```
 
+### Docker
+
+```bash
+docker compose -f docker/docker-compose.yml up -d
+docker compose -f docker/docker-compose.yml exec dmviz python
+```
+
 ```python
 from dmviz.datasets import load_dataset, list_datasets
 from dmviz.ingestion import auto_ingest

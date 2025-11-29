@@ -306,6 +306,35 @@ dmviz/
 
 ---
 
+## Docker
+
+### Build & Run
+
+```bash
+# Build image
+docker compose -f docker/docker-compose.yml build
+
+# Start container (interactive)
+docker compose -f docker/docker-compose.yml up -d
+docker compose -f docker/docker-compose.yml exec dmviz python
+
+# Run script
+docker compose -f docker/docker-compose.yml exec dmviz python -c "from dmviz.datasets import list_datasets; print(list_datasets())"
+
+# Stop
+docker compose -f docker/docker-compose.yml down
+```
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `docker/Dockerfile` | Python 3.11 image with dmviz installed |
+| `docker/docker-compose.yml` | Development setup with volume mounts |
+| `.dockerignore` | Excludes .git, __pycache__, docs |
+
+---
+
 ## Quick Start for Each Team
 
 ### Using Built-in Datasets

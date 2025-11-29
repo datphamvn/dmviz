@@ -1,23 +1,19 @@
 # Team Guide
 
-## Quick Reference
-
-### Pipeline Flow & I/O Contracts
+## Pipeline Flow & I/O Contracts
 
 ```
-[Datasets] or [Ingestion] → [Processing] → [Storage] → [Models] → [Viz]
-   name        str|Path      DataFrame     DataFrame   arrays     arrays
-     ↓            ↓             ↓              ↓          ↓          ↓
- DataFrame    DataFrame     DataFrame        bool      arrays     Figure
+[Datasets/Ingestion] → [Processing] → [Storage] → [Models] → [Viz]
+   name | str|Path      DataFrame     DataFrame   arrays     arrays
+         ↓                 ↓              ↓          ↓          ↓
+      DataFrame         DataFrame       bool      arrays     Figure
 ```
-
----
 
 ## Ownership
 
 | Module | Owner | Files |
 |--------|-------|-------|
-| `datasets/` | All (shared) | `__init__.py`, `catalog.yaml` |
+| `src/datasets/` | All (shared) | `__init__.py`, `catalog.yaml` |
 | `src/ingestion/` | Data Engineering | `base.py`, `connectors.py`, `streaming.py` |
 | `src/processing/` | Data Engineering | `base.py`, `cleaners.py`, `transformers.py`, `features.py` |
 | `src/storage/` | Platform | `base.py`, `file.py`, `warehouse.py` |
@@ -192,46 +188,21 @@ docs(viz): add examples for regression_diagnostics
 
 ## Adding New Components
 
-### 1. Create the class
-
 ```python
-# dmviz/src/<module>/your_file.py
+# 1. Create: src/<module>/your_file.py
 from dmviz.src.core.registry import Registry
 from dmviz.src.<module>.base import Base<Type>
 
 @Registry.register("your_component", category="<module>")
 class YourComponent(Base<Type>):
-    """
-    One-line description.
-    
-    Config: param1, param2
-    INPUT:  <input type>
-    OUTPUT: <output type>
-    """
-    
     name = "your_component"
     
     def _run(self, input_data):
-        raise NotImplementedError("TODO: Implement")
-```
+        raise NotImplementedError("TODO")
 
-### 2. Export in `__init__.py`
-
-```python
-# dmviz/src/<module>/__init__.py
+# 2. Export: src/<module>/__init__.py
 from dmviz.src.<module>.your_file import YourComponent
-
 __all__ = [..., "YourComponent"]
-```
-
-### 3. Test independently
-
-```python
-# tests/<module>/test_your_component.py
-def test_your_component():
-    component = YourComponent(config)
-    result = component.execute(input_data)
-    assert result.success
 ```
 
 ---
@@ -267,82 +238,60 @@ Each module can be developed in isolation. Follow these rules:
 
 ```
 dmviz/
-├── __init__.py           # Package root, exports Registry, Pipeline
-├── datasets/            # Shared - demo datasets
-│   ├── __init__.py      # load_dataset, list_datasets, get_catalog
-│   └── catalog.yaml     # Dataset metadata (sources, features, targets)
-└── src/                 # Source modules
-    ├── core/                 # Shared abstractions (DO NOT MODIFY without team review)
-    │   ├── base.py          # BaseComponent, Pipeline, StageResult
-    │   └── registry.py      # Component registry
-    ├── ingestion/           # Data Engineering Team
-    │   ├── base.py          # BaseIngester, BatchIngester
-    │   ├── connectors.py    # CSV, JSON, API, Parquet ingesters + auto_ingest
-    │   └── streaming.py     # Kafka, streaming sources
-    ├── processing/          # Data Engineering Team
-    │   ├── base.py          # BaseProcessor, ProcessorChain
-    │   ├── cleaners.py      # MissingHandler, OutlierHandler
-    │   ├── transformers.py  # Normalizer, Encoder
-    │   └── features.py      # FeatureEngineer, ColumnSelector
-    ├── storage/             # Platform Team
-    │   ├── base.py          # BaseStorage, DataLake, Layer
-    │   ├── file.py          # ParquetStorage, CSVStorage
-    │   └── warehouse.py     # WarehouseStorage (SQL databases)
-    ├── models/              # ML/Statistics Team
-    │   ├── base.py          # BaseModel, ModelResult
-    │   ├── regression.py    # LinearRegressor (planned)
-    │   ├── classification.py # LogisticClassifier (planned)
-    │   ├── em.py            # EMClustering/GMM (planned)
-    │   └── mle.py           # MLEEstimator (planned)
-    ├── viz/                 # Analytics Team
-    │   ├── base.py          # Figure, PlotStyle, Plotter
-    │   ├── eda.py           # distribution_plot, histogram, boxplot, correlation_heatmap (planned)
-    │   ├── model.py         # regression_diagnostics, roc_curve, confusion_matrix (planned)
-    │   └── cluster.py       # cluster_scatter, gmm_contours, elbow_plot (planned)
-    └── utils/               # Shared utilities
-        └── helpers.py       # load_config, timer, validate_dataframe
+├── __init__.py              # Package root
+├── src/                     # Core library
+│   ├── core/                # Shared abstractions (review before modifying)
+│   │   ├── base.py          # BaseComponent, Pipeline, StageResult
+│   │   └── registry.py      # Component registry
+│   ├── datasets/            # Demo datasets
+│   │   ├── __init__.py      # load_dataset, list_datasets, get_catalog
+│   │   └── catalog.yaml     # Dataset metadata
+│   ├── ingestion/           # Data Engineering
+│   │   ├── base.py          # BaseIngester, BatchIngester
+│   │   ├── connectors.py    # CSV, JSON, API, Parquet + auto_ingest
+│   │   └── streaming.py     # Kafka, streaming sources
+│   ├── processing/          # Data Engineering
+│   │   ├── base.py          # BaseProcessor, ProcessorChain
+│   │   ├── cleaners.py      # MissingHandler, OutlierHandler
+│   │   ├── transformers.py  # Normalizer, Encoder
+│   │   └── features.py      # FeatureEngineer, ColumnSelector
+│   ├── storage/             # Platform
+│   │   ├── base.py          # BaseStorage, DataLake, Layer
+│   │   ├── file.py          # ParquetStorage, CSVStorage
+│   │   └── warehouse.py     # WarehouseStorage (SQL)
+│   ├── models/              # ML/Statistics
+│   │   └── base.py          # BaseModel, ModelResult
+│   ├── viz/                 # Analytics
+│   │   └── base.py          # Figure, PlotStyle, Plotter
+│   └── utils/               # Shared utilities
+│       └── helpers.py       # load_config, timer, validate_dataframe
+├── pipelines/               # Workflow orchestration
+│   └── airflow/             # Airflow DAGs
+├── services/                # External services
+│   └── mock_api/            # FastAPI mock data service
+├── docker/                  # Container setup
+└── docs/                    # Documentation
 ```
-
-> **Note:** Files marked `(planned)` are defined in `__init__.py` but not yet implemented.
 
 ---
 
 ## Docker
 
-### Build & Run
-
 ```bash
-# Build image
 docker compose -f docker/docker-compose.yml build
-
-# Start container (interactive)
 docker compose -f docker/docker-compose.yml up -d
 docker compose -f docker/docker-compose.yml exec dmviz python
-
-# Run script
-docker compose -f docker/docker-compose.yml exec dmviz python -c "from dmviz.datasets import list_datasets; print(list_datasets())"
-
-# Stop
 docker compose -f docker/docker-compose.yml down
 ```
 
-### Files
-
-| File | Purpose |
-|------|---------|
-| `docker/Dockerfile` | Python 3.11 image with dmviz installed |
-| `docker/docker-compose.yml` | Development setup with volume mounts |
-| `.dockerignore` | Excludes .git, __pycache__, docs |
-
 ---
 
-## Quick Start for Each Team
+## Quick Start by Team
 
-### Using Built-in Datasets
+### Datasets
 
 ```python
-# Quick access to demo datasets
-from dmviz.datasets import load_dataset, list_datasets
+from dmviz.src.datasets import load_dataset, list_datasets
 
 print(list_datasets())  # ['california_housing', ...]
 df = load_dataset("california_housing")
@@ -351,71 +300,44 @@ df = load_dataset("california_housing")
 ### Data Engineering (ingestion + processing)
 
 ```python
-# Your domain: load and clean data
 from dmviz.src.ingestion import CSVIngester, auto_ingest
 from dmviz.src.processing import ProcessorChain, MissingHandler, ColumnSelector
 
-# Option 1: Auto-detect file format
-df = auto_ingest("data.csv")
+df = auto_ingest("data.csv")  # Auto-detect format
 
-# Option 2: Explicit ingester
-ingester = CSVIngester({"delimiter": ","})
-result = ingester.execute("data.csv")  # Returns StageResult[DataFrame]
-
-# Process
 chain = ProcessorChain([
     MissingHandler(),
     ColumnSelector({"columns": ["col1", "col2"], "mode": "keep"})
 ])
-clean_df = chain.process(result.data)
+clean_df = chain.process(df)
 ```
 
 ### Platform (storage)
 
 ```python
-# Your domain: persist data across layers
-from dmviz.src.storage import DataLake, ParquetStorage, CSVStorage
+from dmviz.src.storage import DataLake, ParquetStorage
 
-# DataLake with bronze/silver/gold layers (Medallion Architecture)
 lake = DataLake("./data")
 lake.save(df, "customers", layer="bronze")
 df = lake.read("customers", layer="silver")
-
-# Direct file storage
-parquet = ParquetStorage({"path": "./data/output.parquet"})
-parquet.save(df)
 ```
 
 ### ML/Statistics (models)
 
 ```python
-# Your domain: train and predict
 from dmviz.src.models import LinearRegressor
 
-# Implement fit/predict methods
 model = LinearRegressor(solver="analytic")
 model.fit(X_train, y_train)
 predictions = model.predict(X_test)
-print(model.result_.metrics)
 ```
 
 ### Analytics (viz)
 
 ```python
-# Your domain: visualize results
-from dmviz.src.viz import (
-    regression_diagnostics, correlation_heatmap,
-    distribution_plot, cluster_scatter
-)
+from dmviz.src.viz import regression_diagnostics, correlation_heatmap
 
-# EDA plots
 fig = correlation_heatmap(df)
-fig = distribution_plot(df["column"])
-
-# Model diagnostics
 fig = regression_diagnostics(y_true, y_pred)
 fig.save("diagnostics.png")
-
-# Clustering
-fig = cluster_scatter(X, labels)
 ```

@@ -1,6 +1,5 @@
-"""
-Mock API service using FastAPI.
+"""Mock API service for transaction data."""
 
-Provides test endpoints for data ingestion development.
-"""
+from .app import app
 
+__all__ = ["app"]

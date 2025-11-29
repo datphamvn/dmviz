@@ -8,9 +8,9 @@ Contract:
     read():  str -> pd.DataFrame
 """
 
-from dmviz.storage.base import BaseStorage, DataLake, Layer
-from dmviz.storage.file import ParquetStorage, CSVStorage
-from dmviz.storage.warehouse import WarehouseStorage
+from dmviz.src.storage.base import BaseStorage, DataLake, Layer
+from dmviz.src.storage.file import ParquetStorage, CSVStorage
+from dmviz.src.storage.warehouse import WarehouseStorage
 
 __all__ = [
     "BaseStorage",

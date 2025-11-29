@@ -7,8 +7,8 @@ SQL databases and data warehouses.
 
 import pandas as pd
 
-from dmviz.core.registry import Registry
-from dmviz.storage.base import BaseStorage
+from dmviz.src.core.registry import Registry
+from dmviz.src.storage.base import BaseStorage
 
 
 @Registry.register("warehouse_storage", category="storage")

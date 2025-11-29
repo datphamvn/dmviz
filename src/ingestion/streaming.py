@@ -8,8 +8,8 @@ For Kafka, message queues, and streaming APIs.
 from typing import Iterator
 import pandas as pd
 
-from dmviz.core.registry import Registry
-from dmviz.ingestion.base import BaseIngester
+from dmviz.src.core.registry import Registry
+from dmviz.src.ingestion.base import BaseIngester
 
 
 @Registry.register("kafka_consumer", category="ingestion")

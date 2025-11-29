@@ -8,10 +8,10 @@ Contract:
     OUTPUT: pd.DataFrame
 """
 
-from dmviz.processing.base import BaseProcessor, ProcessorChain
-from dmviz.processing.cleaners import MissingHandler, OutlierHandler
-from dmviz.processing.transformers import Normalizer, Encoder
-from dmviz.processing.features import FeatureEngineer, ColumnSelector
+from dmviz.src.processing.base import BaseProcessor, ProcessorChain
+from dmviz.src.processing.cleaners import MissingHandler, OutlierHandler
+from dmviz.src.processing.transformers import Normalizer, Encoder
+from dmviz.src.processing.features import FeatureEngineer, ColumnSelector
 
 __all__ = [
     "BaseProcessor",

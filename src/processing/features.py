@@ -7,8 +7,8 @@ Create new features from existing data.
 
 import pandas as pd
 
-from dmviz.core.registry import Registry
-from dmviz.processing.base import BaseProcessor
+from dmviz.src.core.registry import Registry
+from dmviz.src.processing.base import BaseProcessor
 
 
 @Registry.register("feature_engineer", category="processing")

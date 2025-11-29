@@ -5,7 +5,7 @@ Enables teams to register components independently.
 """
 
 from typing import Type, TypeVar, Optional, Any
-from dmviz.core.base import BaseComponent
+from dmviz.src.core.base import BaseComponent
 
 T = TypeVar("T", bound=BaseComponent)
 

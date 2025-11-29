@@ -1,10 +1,7 @@
-"""
-dmviz - Data Management & Visualization toolkit.
-"""
+"""Core base classes and utilities."""
 
 from dmviz.src.core.base import Pipeline, StageResult, BaseComponent
 from dmviz.src.core.registry import Registry
 
-__version__ = "0.1.0"
 __all__ = ["Pipeline", "StageResult", "BaseComponent", "Registry"]
 

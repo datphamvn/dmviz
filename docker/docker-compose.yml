@@ -1,0 +1,11 @@
+services:
+  dmviz:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ..:/app
+      - ../data:/data
+    stdin_open: true
+    tty: true
+

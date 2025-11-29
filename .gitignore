@@ -1,0 +1,44 @@
+# Data files (too large for repo)
+*.csv
+*.parquet
+*.pkl
+*.joblib
+datasets/raw/
+datasets/processed/
+
+# Credentials
+.env
+*.key
+secrets/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Reports & outputs
+reports/figures/*.png
+reports/figures/*.pdf
+*.log
+
+# Virtual environments
+venv/
+.venv/
+env/
+

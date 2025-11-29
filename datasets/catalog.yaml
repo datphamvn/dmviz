@@ -1,0 +1,14 @@
+# Dataset Catalog
+# Machine-readable metadata for all datasets
+
+datasets:
+  california_housing:
+    name: California Housing
+    source: sklearn
+    loader: sklearn.datasets.fetch_california_housing
+    records: 20640
+    features: 8
+    target: MedHouseVal
+    use_case: linear_regression
+    description: California housing prices from 1990 census
+

@@ -16,5 +16,16 @@ dependencies = [
 
 [tool.setuptools]
 package-dir = {"dmviz" = "."}
-packages = ["dmviz", "dmviz.core", "dmviz.datasets", "dmviz.ingestion", "dmviz.models", "dmviz.processing", "dmviz.storage", "dmviz.utils", "dmviz.viz"]
+packages = [
+    "dmviz",
+    "dmviz.src",
+    "dmviz.src.core",
+    "dmviz.src.ingestion",
+    "dmviz.src.processing",
+    "dmviz.src.storage",
+    "dmviz.src.models",
+    "dmviz.src.viz",
+    "dmviz.src.utils",
+    "dmviz.datasets",
+]
 

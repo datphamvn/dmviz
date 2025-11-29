@@ -8,11 +8,11 @@ Contract:
     predict(X):  array -> array
 """
 
-from dmviz.models.base import BaseModel, ModelResult
-from dmviz.models.regression import LinearRegressor
-from dmviz.models.classification import LogisticClassifier
-from dmviz.models.em import EMClustering
-from dmviz.models.mle import MLEEstimator
+from dmviz.src.models.base import BaseModel, ModelResult
+from dmviz.src.models.regression import LinearRegressor
+from dmviz.src.models.classification import LogisticClassifier
+from dmviz.src.models.em import EMClustering
+from dmviz.src.models.mle import MLEEstimator
 
 __all__ = [
     "BaseModel",

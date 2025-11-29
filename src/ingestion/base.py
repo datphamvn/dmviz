@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Union, Iterator
 import pandas as pd
 
-from dmviz.core.base import BaseComponent
+from dmviz.src.core.base import BaseComponent
 
 
 class BaseIngester(BaseComponent[Union[str, Path, dict], pd.DataFrame]):

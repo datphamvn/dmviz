@@ -18,13 +18,13 @@
 | Module | Owner | Files |
 |--------|-------|-------|
 | `datasets/` | All (shared) | `__init__.py`, `catalog.yaml` |
-| `ingestion/` | Data Engineering | `base.py`, `connectors.py`, `streaming.py` |
-| `processing/` | Data Engineering | `base.py`, `cleaners.py`, `transformers.py`, `features.py` |
-| `storage/` | Platform | `base.py`, `file.py`, `warehouse.py` |
-| `models/` | ML/Statistics | `base.py` + `regression.py`, `classification.py`, `em.py`, `mle.py` (planned) |
-| `viz/` | Analytics | `base.py` + `eda.py`, `model.py`, `cluster.py` (planned) |
-| `core/` | All (shared) | `base.py`, `registry.py` |
-| `utils/` | All (shared) | `helpers.py` |
+| `src/ingestion/` | Data Engineering | `base.py`, `connectors.py`, `streaming.py` |
+| `src/processing/` | Data Engineering | `base.py`, `cleaners.py`, `transformers.py`, `features.py` |
+| `src/storage/` | Platform | `base.py`, `file.py`, `warehouse.py` |
+| `src/models/` | ML/Statistics | `base.py` + `regression.py`, `classification.py`, `em.py`, `mle.py` (planned) |
+| `src/viz/` | Analytics | `base.py` + `eda.py`, `model.py`, `cluster.py` (planned) |
+| `src/core/` | All (shared) | `base.py`, `registry.py` |
+| `src/utils/` | All (shared) | `helpers.py` |
 
 ---
 
@@ -157,7 +157,7 @@ git pull origin dev
 git checkout -b feat/ingestion-excel
 
 # 2. Work on your module
-# ... edit files in dmviz/ingestion/ ...
+# ... edit files in dmviz/src/ingestion/ ...
 
 # 3. Commit with conventional messages
 git add dmviz/ingestion/
@@ -195,9 +195,9 @@ docs(viz): add examples for regression_diagnostics
 ### 1. Create the class
 
 ```python
-# dmviz/<module>/your_file.py
-from dmviz.core.registry import Registry
-from dmviz.<module>.base import Base<Type>
+# dmviz/src/<module>/your_file.py
+from dmviz.src.core.registry import Registry
+from dmviz.src.<module>.base import Base<Type>
 
 @Registry.register("your_component", category="<module>")
 class YourComponent(Base<Type>):
@@ -218,8 +218,8 @@ class YourComponent(Base<Type>):
 ### 2. Export in `__init__.py`
 
 ```python
-# dmviz/<module>/__init__.py
-from dmviz.<module>.your_file import YourComponent
+# dmviz/src/<module>/__init__.py
+from dmviz.src.<module>.your_file import YourComponent
 
 __all__ = [..., "YourComponent"]
 ```
@@ -256,7 +256,7 @@ Each module can be developed in isolation. Follow these rules:
 
 | Scenario | Action |
 |----------|--------|
-| Need new base class method | PR to `core/`, notify all teams |
+| Need new base class method | PR to `src/core/`, notify all teams |
 | Need data from another stage | Use existing I/O contract |
 | Found bug in shared code | Create issue, assign to owner |
 | Proposing interface change | RFC in GitHub Discussion |
@@ -268,38 +268,39 @@ Each module can be developed in isolation. Follow these rules:
 ```
 dmviz/
 ├── __init__.py           # Package root, exports Registry, Pipeline
-├── core/                 # Shared abstractions (DO NOT MODIFY without team review)
-│   ├── base.py          # BaseComponent, Pipeline, StageResult
-│   └── registry.py      # Component registry
 ├── datasets/            # Shared - demo datasets
 │   ├── __init__.py      # load_dataset, list_datasets, get_catalog
 │   └── catalog.yaml     # Dataset metadata (sources, features, targets)
-├── ingestion/           # Data Engineering Team
-│   ├── base.py          # BaseIngester, BatchIngester
-│   ├── connectors.py    # CSV, JSON, API, Parquet ingesters + auto_ingest
-│   └── streaming.py     # Kafka, streaming sources
-├── processing/          # Data Engineering Team
-│   ├── base.py          # BaseProcessor, ProcessorChain
-│   ├── cleaners.py      # MissingHandler, OutlierHandler
-│   ├── transformers.py  # Normalizer, Encoder
-│   └── features.py      # FeatureEngineer, ColumnSelector
-├── storage/             # Platform Team
-│   ├── base.py          # BaseStorage, DataLake, Layer
-│   ├── file.py          # ParquetStorage, CSVStorage
-│   └── warehouse.py     # WarehouseStorage (SQL databases)
-├── models/              # ML/Statistics Team
-│   ├── base.py          # BaseModel, ModelResult
-│   ├── regression.py    # LinearRegressor (planned)
-│   ├── classification.py # LogisticClassifier (planned)
-│   ├── em.py            # EMClustering/GMM (planned)
-│   └── mle.py           # MLEEstimator (planned)
-├── viz/                 # Analytics Team
-│   ├── base.py          # Figure, PlotStyle, Plotter
-│   ├── eda.py           # distribution_plot, histogram, boxplot, correlation_heatmap (planned)
-│   ├── model.py         # regression_diagnostics, roc_curve, confusion_matrix (planned)
-│   └── cluster.py       # cluster_scatter, gmm_contours, elbow_plot (planned)
-└── utils/               # Shared utilities
-    └── helpers.py       # load_config, timer, validate_dataframe
+└── src/                 # Source modules
+    ├── core/                 # Shared abstractions (DO NOT MODIFY without team review)
+    │   ├── base.py          # BaseComponent, Pipeline, StageResult
+    │   └── registry.py      # Component registry
+    ├── ingestion/           # Data Engineering Team
+    │   ├── base.py          # BaseIngester, BatchIngester
+    │   ├── connectors.py    # CSV, JSON, API, Parquet ingesters + auto_ingest
+    │   └── streaming.py     # Kafka, streaming sources
+    ├── processing/          # Data Engineering Team
+    │   ├── base.py          # BaseProcessor, ProcessorChain
+    │   ├── cleaners.py      # MissingHandler, OutlierHandler
+    │   ├── transformers.py  # Normalizer, Encoder
+    │   └── features.py      # FeatureEngineer, ColumnSelector
+    ├── storage/             # Platform Team
+    │   ├── base.py          # BaseStorage, DataLake, Layer
+    │   ├── file.py          # ParquetStorage, CSVStorage
+    │   └── warehouse.py     # WarehouseStorage (SQL databases)
+    ├── models/              # ML/Statistics Team
+    │   ├── base.py          # BaseModel, ModelResult
+    │   ├── regression.py    # LinearRegressor (planned)
+    │   ├── classification.py # LogisticClassifier (planned)
+    │   ├── em.py            # EMClustering/GMM (planned)
+    │   └── mle.py           # MLEEstimator (planned)
+    ├── viz/                 # Analytics Team
+    │   ├── base.py          # Figure, PlotStyle, Plotter
+    │   ├── eda.py           # distribution_plot, histogram, boxplot, correlation_heatmap (planned)
+    │   ├── model.py         # regression_diagnostics, roc_curve, confusion_matrix (planned)
+    │   └── cluster.py       # cluster_scatter, gmm_contours, elbow_plot (planned)
+    └── utils/               # Shared utilities
+        └── helpers.py       # load_config, timer, validate_dataframe
 ```
 
 > **Note:** Files marked `(planned)` are defined in `__init__.py` but not yet implemented.
@@ -351,8 +352,8 @@ df = load_dataset("california_housing")
 
 ```python
 # Your domain: load and clean data
-from dmviz.ingestion import CSVIngester, auto_ingest
-from dmviz.processing import ProcessorChain, MissingHandler, ColumnSelector
+from dmviz.src.ingestion import CSVIngester, auto_ingest
+from dmviz.src.processing import ProcessorChain, MissingHandler, ColumnSelector
 
 # Option 1: Auto-detect file format
 df = auto_ingest("data.csv")
@@ -373,7 +374,7 @@ clean_df = chain.process(result.data)
 
 ```python
 # Your domain: persist data across layers
-from dmviz.storage import DataLake, ParquetStorage, CSVStorage
+from dmviz.src.storage import DataLake, ParquetStorage, CSVStorage
 
 # DataLake with bronze/silver/gold layers (Medallion Architecture)
 lake = DataLake("./data")
@@ -389,7 +390,7 @@ parquet.save(df)
 
 ```python
 # Your domain: train and predict
-from dmviz.models import LinearRegressor
+from dmviz.src.models import LinearRegressor
 
 # Implement fit/predict methods
 model = LinearRegressor(solver="analytic")
@@ -402,7 +403,7 @@ print(model.result_.metrics)
 
 ```python
 # Your domain: visualize results
-from dmviz.viz import (
+from dmviz.src.viz import (
     regression_diagnostics, correlation_heatmap,
     distribution_plot, cluster_scatter
 )

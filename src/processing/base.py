@@ -11,7 +11,7 @@ from abc import abstractmethod
 from typing import Any
 import pandas as pd
 
-from dmviz.core.base import BaseComponent
+from dmviz.src.core.base import BaseComponent
 
 
 class BaseProcessor(BaseComponent[pd.DataFrame, pd.DataFrame]):

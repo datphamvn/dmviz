@@ -8,15 +8,15 @@ Contract:
     OUTPUT: pd.DataFrame
 """
 
-from dmviz.ingestion.base import BaseIngester, BatchIngester
-from dmviz.ingestion.connectors import (
+from dmviz.src.ingestion.base import BaseIngester, BatchIngester
+from dmviz.src.ingestion.connectors import (
     CSVIngester,
     JSONIngester,
     APIIngester,
     ParquetIngester,
     auto_ingest,
 )
-from dmviz.ingestion.streaming import KafkaConsumer
+from dmviz.src.ingestion.streaming import KafkaConsumer
 
 __all__ = [
     "BaseIngester",

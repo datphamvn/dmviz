@@ -7,8 +7,8 @@ Handle missing values, outliers, duplicates.
 
 import pandas as pd
 
-from dmviz.core.registry import Registry
-from dmviz.processing.base import BaseProcessor
+from dmviz.src.core.registry import Registry
+from dmviz.src.processing.base import BaseProcessor
 
 
 @Registry.register("missing_handler", category="processing")

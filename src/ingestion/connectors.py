@@ -9,8 +9,8 @@ from pathlib import Path
 from typing import Union
 import pandas as pd
 
-from dmviz.core.registry import Registry
-from dmviz.ingestion.base import BaseIngester, BatchIngester
+from dmviz.src.core.registry import Registry
+from dmviz.src.ingestion.base import BaseIngester, BatchIngester
 
 
 @Registry.register("csv_ingester", category="ingestion")

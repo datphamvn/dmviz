@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Literal
 import pandas as pd
 
-from dmviz.core.base import BaseComponent
+from dmviz.src.core.base import BaseComponent
 
 
 Layer = Literal["bronze", "silver", "gold"]

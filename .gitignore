@@ -217,3 +217,4 @@ __marimo__/
 
 *.db
 services/mock_api/data/online_retail_II.xlsx
+experiments/

@@ -158,7 +158,7 @@ def extract_alcohol_data(**context):
 
 # Định nghĩa default arguments cho DAG
 default_args = {
-    'owner': 'airflow',
+    'owner': 'anhth',
     'depends_on_past': False,
     'email_on_failure': False,
     'email_on_retry': False,

@@ -166,14 +166,45 @@ Dự án tập trung vào **Phân tích Giá trị Khách hàng** cho một nhà
 | **ONS Consumer Trends** | External | UK Macro-economic data (HHFCE) | Quarterly |
 | **Excel Files** | Historical | Online Retail II dataset | One-time load |
 
-#### 2.2.2 Airflow DAGs
+#### 2.2.2 Data Partitioning Strategy
+
+Dữ liệu Online Retail II (2009-12-01 đến 2011-12-09) được chia thành 2 phần:
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    DATA PARTITIONING STRATEGY                            │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  Dataset Timeline: 2009-12-01 ──────────────────────────── 2011-12-09   │
+│                                                                          │
+│  ┌─────────────────────────────────────┐  ┌─────────────────────────┐   │
+│  │        HISTORICAL DATA              │  │    STREAMING DATA       │   │
+│  │    (extract_historical_data)        │  │  (stream_daily_batch)   │   │
+│  │                                     │  │                         │   │
+│  │    2009-12-01 → 2011-11-30          │  │  2011-12-01 → 2011-12-09│   │
+│  │    (~24 months)                     │  │  (9 days)               │   │
+│  │                                     │  │                         │   │
+│  │    → internal_historical/           │  │  → internal_streaming/  │   │
+│  │    → Partitioned by year/month      │  │  → Partitioned by day   │   │
+│  │    → One-time manual load           │  │  → Daily simulation     │   │
+│  └─────────────────────────────────────┘  └─────────────────────────┘   │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+| Data Type | Date Range | DAG | HDFS Path |
+|-----------|------------|-----|-----------|
+| **Historical** | 2009-12-01 → 2011-11-30 | `extract_historical_data` | `/data_lake/raw_zone/internal_historical/` |
+| **Streaming** | 2011-12-01 → 2011-12-09 | `stream_daily_batch` | `/data_lake/raw_zone/internal_streaming/` |
+
+#### 2.2.3 Airflow DAGs
 
 | DAG | Schedule | Description |
 |-----|----------|-------------|
-| `stream_daily_batch` | Daily | API batch ingestion → HDFS → Trigger processing |
+| `extract_historical_data` | Manual | Extract historical data (2009-12-01 → 2011-11-30) to HDFS |
+| `stream_daily_batch` | Daily | Simulate streaming cho tháng cuối (2011-12-01 → 2011-12-09) |
 | `kafka_consumer_to_hdfs` | */30 * * * * | Consume từ Kafka → HDFS (micro-batch) |
 | `stream_daily_processing` | Triggered | Validate, Clean, Transform, Aggregate |
-| `extract_historical_data` | Manual | Initial historical data load |
 | `extract_consumer_trends` | Quarterly | ONS Consumer Trends ETL |
 | `historical_data_etl_processing` | Daily | Data cleaning, feature engineering, RFM |
 | `model_scoring` | Daily | CLV, Propensity, Uplift scoring |
@@ -249,11 +280,20 @@ Kafka Topic → Consumer → Group by Date → Parquet → HDFS Upload
 #### 3.1.4 Daily Streaming Batch (`stream_daily_batch.py`)
 
 ```python
-# Pipeline Flow (Legacy/Alternative)
+# Pipeline Flow
 API Call (paginated) → DataFrame → Parquet → WebHDFS Upload
 
+# Data Partitioning Strategy:
+# - Historical data: extract_historical_data extracts 2009-12-01 → 2011-11-30
+# - Streaming simulation: stream_daily_batch simulates only the last month (2011-12-01 → 2011-12-09)
+
+# Date Mapping Logic:
+# - DAG start_date: 2025-01-01 → maps to 2011-12-01
+# - DAG execution 2025-01-02 → maps to 2011-12-02
+# - ... continues for 9 days, then cycles back
+
 # Key Features:
-- Paginated API consumption (1000 records/batch)
+- Paginated API consumption (100 records/batch)
 - Date filtering (start_date, end_date)
 - Bearer token authentication
 - WebHDFS upload with DataNode redirect handling
@@ -703,14 +743,16 @@ KAFKA_CONSUMER_GROUP=airflow-hdfs-consumer
 ```
 /data_lake/
 ├── raw_zone/
-│   ├── internal_streaming/              # Kafka & API batch data
-│   │   └── year=YYYY/
-│   │       └── month=MM/
-│   │           └── day=DD/
+│   ├── internal_streaming/              # Streaming simulation (Dec 2011)
+│   │   └── year=2011/
+│   │       └── month=12/
+│   │           └── day=DD/              # DD: 01-09
 │   │               ├── kafka_batch_*.parquet
 │   │               └── transactions_*.parquet
-│   ├── internal_historical/
-│   │   └── online_retail_ii.parquet
+│   ├── internal_historical/             # Historical data (Dec 2009 - Nov 2011)
+│   │   └── year=YYYY/
+│   │       └── month=MM/
+│   │           └── transactions_YYYY-MM.parquet
 │   └── external_ons_consumer_trends/
 │       └── consumer_trends_YYYY-Q#.parquet
 ├── staging_zone/

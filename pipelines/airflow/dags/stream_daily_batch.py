@@ -13,7 +13,7 @@ import tempfile
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from airflow.api.common.trigger_dag import trigger_dag
 
 # Cấu hình API
 API_BASE_URL = os.environ.get('API_BASE_URL', "http://data_gov_api:80/api/v1/raw_transactions")
@@ -109,13 +109,15 @@ def upload_to_webhdfs(local_file: str, hdfs_path: str) -> bool:
 def get_simulated_date(context) -> datetime:
     """
     Lấy ngày simulate từ execution_date của DAG.
-    Dữ liệu gốc từ 2009-12-01 đến 2011-12-09.
+    Historical data đã extract đến 2011-11-30.
+    Streaming sẽ chỉ simulate tháng cuối cùng: 2011-12-01 đến 2011-12-09.
     Ta sẽ map execution_date hiện tại sang khoảng thời gian đó.
     """
     execution_date = context['execution_date']
     
-    # Base date trong dữ liệu gốc
-    base_historical_date = datetime(2009, 12, 1)
+    # Base date cho streaming (tháng cuối cùng sau historical)
+    # Historical đã extract đến 2011-11-30, nên streaming bắt đầu từ 2011-12-01
+    base_historical_date = datetime(2011, 12, 1)
     
     # Base date khi DAG bắt đầu chạy (ví dụ: 2025-01-01)
     base_dag_date = datetime(2025, 1, 1)
@@ -126,10 +128,12 @@ def get_simulated_date(context) -> datetime:
     # Tính ngày simulate trong dữ liệu gốc
     simulated_date = base_historical_date + timedelta(days=days_offset)
     
-    # Giới hạn trong khoảng dữ liệu có sẵn
+    # Giới hạn trong khoảng dữ liệu có sẵn (chỉ tháng 12/2011)
     max_date = datetime(2011, 12, 9)
     if simulated_date > max_date:
-        simulated_date = base_historical_date + timedelta(days=(days_offset % (max_date - base_historical_date).days))
+        # Cycle lại trong khoảng 9 ngày của tháng 12
+        days_in_range = (max_date - base_historical_date).days + 1  # 9 ngày
+        simulated_date = base_historical_date + timedelta(days=(days_offset % days_in_range))
     
     return simulated_date
 
@@ -265,6 +269,35 @@ def stream_daily_batch(**context):
     }
 
 
+def trigger_processing_dag(**context):
+    """
+    Trigger stream_daily_processing DAG với simulated_date từ XCom
+    """
+    ti = context['ti']
+    result = ti.xcom_pull(task_ids='stream_daily_batch')
+    
+    if not result or result.get('status') == 'no_data':
+        logger.info("No data ingested, skipping processing trigger")
+        return {"status": "skipped", "reason": "no_data"}
+    
+    simulated_date = result.get('date')
+    logger.info(f"Triggering stream_daily_processing for date: {simulated_date}")
+    
+    # Trigger the processing DAG
+    trigger_dag(
+        dag_id='stream_daily_processing',
+        run_id=f"triggered_by_stream_batch_{simulated_date}_{context['execution_date'].isoformat()}",
+        conf={
+            'source': 'api_batch',
+            'process_date': simulated_date
+        },
+        execution_date=None,  # Use current time
+        replace_microseconds=False,
+    )
+    
+    return {"status": "triggered", "process_date": simulated_date}
+
+
 # Định nghĩa default arguments cho DAG
 default_args = {
     'owner': 'anhth',
@@ -282,7 +315,7 @@ with DAG(
     description='Simulate streaming daily batch ingestion và lưu vào HDFS Data Lake',
     schedule_interval='@daily',  # Chạy hàng ngày
     start_date=datetime(2025, 1, 1),
-    end_date=datetime(2025, 12, 31),  # Kết thúc sau 1 năm
+    end_date=datetime(2025, 1, 9),  # Chỉ chạy 9 ngày (map to 2011-12-01 → 2011-12-09)
     catchup=True,  # Bật catchup để simulate streaming
     max_active_runs=3,  # Cho phép 3 runs đồng thời
     tags=['streaming', 'internal', 'daily', 'hdfs'],
@@ -296,14 +329,11 @@ with DAG(
     )
     
     # Trigger processing DAG after successful ingestion
-    trigger_processing = TriggerDagRunOperator(
+    # Sử dụng PythonOperator để lấy simulated_date từ XCom
+    trigger_processing = PythonOperator(
         task_id='trigger_processing',
-        trigger_dag_id='stream_daily_processing',
-        conf={
-            'source': 'api_batch',
-            'process_date': '{{ execution_date.strftime("%Y-%m-%d") }}'
-        },
-        wait_for_completion=False,
+        python_callable=trigger_processing_dag,
+        provide_context=True,
     )
     
     stream_task >> trigger_processing

@@ -61,15 +61,40 @@ def list_hdfs_directory(hdfs_path: str) -> List[str]:
 
 
 def read_parquet_from_hdfs(hdfs_path: str) -> pd.DataFrame:
-    """Read parquet file from HDFS"""
+    """Read parquet file from HDFS via WebHDFS"""
     try:
         url = f"http://{WEBHDFS_HOST}:{WEBHDFS_PORT}/webhdfs/v1{hdfs_path}?op=OPEN&user.name={HDFS_USER}"
-        response = requests.get(url, timeout=120, allow_redirects=True)
         
-        if response.status_code == 200:
+        # First request to get redirect to DataNode
+        response = requests.get(url, timeout=30, allow_redirects=False)
+        
+        if response.status_code == 307:
+            # Get the redirect location (DataNode URL)
+            datanode_url = response.headers['Location']
+            
+            # Replace hostname with IP address (Docker container can't resolve hostname)
+            from urllib.parse import urlparse, urlunparse
+            parsed = urlparse(datanode_url)
+            # Use WEBHDFS_HOST IP but with DataNode port
+            fixed_url = urlunparse(parsed._replace(netloc=f"{WEBHDFS_HOST}:{parsed.port}"))
+            logger.info(f"Reading from DataNode: {fixed_url}")
+            
+            # Now read the actual file content
+            data_response = requests.get(fixed_url, timeout=120)
+            
+            if data_response.status_code == 200:
+                import io
+                return pd.read_parquet(io.BytesIO(data_response.content))
+            else:
+                logger.error(f"Failed to read from DataNode. Status: {data_response.status_code}")
+                return pd.DataFrame()
+        elif response.status_code == 200:
+            # Direct response (small file or no redirect)
             import io
             return pd.read_parquet(io.BytesIO(response.content))
-        return pd.DataFrame()
+        else:
+            logger.error(f"Failed to open file. Status: {response.status_code}")
+            return pd.DataFrame()
     except Exception as e:
         logger.error(f"Error reading from HDFS: {e}")
         return pd.DataFrame()

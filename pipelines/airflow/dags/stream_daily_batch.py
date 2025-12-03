@@ -13,6 +13,7 @@ import tempfile
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 # Cấu hình API
 API_BASE_URL = os.environ.get('API_BASE_URL', "http://data_gov_api:80/api/v1/raw_transactions")
@@ -294,4 +295,15 @@ with DAG(
         provide_context=True,
     )
     
-    stream_task
+    # Trigger processing DAG after successful ingestion
+    trigger_processing = TriggerDagRunOperator(
+        task_id='trigger_processing',
+        trigger_dag_id='stream_daily_processing',
+        conf={
+            'source': 'api_batch',
+            'process_date': '{{ execution_date.strftime("%Y-%m-%d") }}'
+        },
+        wait_for_completion=False,
+    )
+    
+    stream_task >> trigger_processing

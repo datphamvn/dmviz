@@ -4,3 +4,5 @@ psycopg2-binary
 pyarrow
 requests
 scikit-learn
+kafka-python-ng==2.2.3
+kafka-python==2.0.2

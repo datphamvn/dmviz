@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from database import SessionLocal, engine
 from models import Base, Transaction
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 
 Base.metadata.create_all(bind=engine)
@@ -102,8 +102,9 @@ def get_raw_transactions(limit: int = 100, offset: int = 0, start_date: str = No
         start = datetime.strptime(start_date, '%Y-%m-%d')
         query = query.filter(Transaction.InvoiceDate >= start)
     if end_date:
-        end = datetime.strptime(end_date, '%Y-%m-%d')
-        query = query.filter(Transaction.InvoiceDate <= end)
+        # Include entire end_date by adding 1 day
+        end = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+        query = query.filter(Transaction.InvoiceDate < end)
     transactions = query.offset(offset).limit(limit).all()
     return [
         {

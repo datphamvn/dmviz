@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+pandas
+sqlalchemy
+pydantic
+openpyxl
+kafka-python==2.0.2
